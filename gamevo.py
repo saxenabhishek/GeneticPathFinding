@@ -8,17 +8,15 @@ Set a random start and stop point and create obstacles in between, must always b
 agents store a string of forces which are vectors and should in theory find a path to end.
 
 
-
 @author: Birds
 """
+import sys
+import traceback
 import pygame
-import sys, traceback
 import gameevo_core as cr
 
 
 from pygame.locals import (
-    K_UP,
-    K_DOWN,
     K_LEFT,
     K_RIGHT,
     K_ESCAPE,
@@ -26,66 +24,90 @@ from pygame.locals import (
     QUIT
 )
 
+## Global variables to controle things
 
-
+# height and width of the window
 w, h = 600, 400
-start = (0,0) # make random in future
-end = (500,200)
-pop = 5000
-mutrate = 0.1
+
+# Start and End Points
+start = (0, 0)
+end = (500, 200)
+
+# population per gen., mutation rate, frames given to each gen., No. of obs
+pop = 50
+mutrate = 0.2
 fpg = 700
-# user should be able to controle the size of populationa and the time period for each population
+obs = 5
 
-sim = cr.sim(w,h,(20,20),end,mutrate,fpg) # controles the entire simulation
+# initializing a sim object
+sim = cr.sim(w, h, (50, 50), end, mutrate, fpg)
 
+# pygame initializations
 pygame.init()
 clock = pygame.time.Clock()
-screen = pygame.display.set_mode((w,h))
+screen = pygame.display.set_mode((w, h))
 
-sim.obs(12) # put 11 obstacles
-sim.initagents(100) # initiate genetic for with 1 agent
+# tells sim about obs and population to put
+sim.obs(obs)
+sim.initagents(pop)
 
-def rateupdate(pk,rate):
-    if rate < 2:
-        rate = 2
-    if rate >500:
-        rate = 240
-    if pk[K_LEFT]:
-        rate -= 10
-    if pk[K_RIGHT]:
-        rate += 10
-    return rate
-    
+def rateupdate(pk_, rate_):
+    """
+    when you press the arrow keys this function changes the framerate
+    """
+    if rate_ < 30:
+        rate_ = 30
+    if rate_ > 500:
+        rate = 480
+    if pk_[K_LEFT]:
+        rate_ -= 10
+    if pk_[K_RIGHT]:
+        rate_ += 10
+    return rate_
+
+# to know if you are still intrested and if so whats the framerate
 on = False
-    
 rate = 60
+
+# try block because pygame messesup bigtime
 try:
+    # game loop
     while not on:
+        # if you feel like quiting
         for event in pygame.event.get():
             if event.type == QUIT:
                 on = True
-        
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     on = True
-                
+                    
         pk = pygame.key.get_pressed()
-        rate = rateupdate(pk,rate)
-        screen.fill((240, 255, 240))
+        rate = rateupdate(pk, rate)
+        screen.fill((50, 50, 80))
         clock.tick(rate)
-        pygame.draw.circle(screen,(64,64,255),end,5)
+        
+        # Blue circle for end point
+        pygame.draw.circle(screen, (64, 64, 255), end, 5)
         #don't disturb code above this
+        
+        # update everything
         sim.updateall()
         
         # to draw all sprites
         for i in sim.coll:
             screen.blit(i.surf, i.rect)
         for entity in sim.pool:
-            pygame.draw.circle(screen, (128, 128, 255), (entity.rect[0] + round(entity.speed.i*2) + 10, entity.rect[1] + round(entity.speed.j*2) + 10), 2)
-            screen.blit(entity.surf, entity.rect)         
+            
+            # draw cicles to know velocity direction
+            pygame.draw.circle(screen, (128, 255, 128),
+                               (entity.rect[0] + round(entity.speed.i*2) + 10,
+                                entity.rect[1] + round(entity.speed.j*2) + 10),
+                               2)
+            screen.blit(entity.surf, entity.rect)
+            
         pygame.display.flip()
 except:
     print("error pls help")
     traceback.print_exc(file=sys.stdout)
-finally:    
+finally:
     pygame.quit()
