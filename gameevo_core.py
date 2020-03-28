@@ -3,10 +3,12 @@
 Created on Fri Feb 14 02:03:11 2020
 
 @author: Birds
+
+#game evo classes
 """
 
 
-#game evo classes
+
 
 import pygame
 import random
@@ -17,12 +19,12 @@ class vector(): # simple vector class defines vectors in a polar system
         if i != None :
             self.i = i
         else:
-            self.i = random.randrange(-1, 2) *0.001
+            self.i = random.randrange(-1, 2) *0.01
 
         if j != None :
             self.j = j
         else:
-            self.j = random.randrange(-1, 2) *0.001
+            self.j = random.randrange(-1, 2) *0.01
 
     def add(self,that):
         self.i+= that.i
@@ -49,14 +51,14 @@ class box(pygame.sprite.Sprite): # to make boxes of different colors
     def __init__(self, pos, size):
         super(box, self).__init__()
         self.surf = pygame.Surface(size)
-        self.surf.fill((random.randint(0,255),random.randint(80,120), random.randint(80,150)))
+        self.surf.fill((random.randint(69,87),random.randint(98,123), random.randint(128,255)))
         self.rect = self.surf.get_rect(center = (pos))
 
 class agent(pygame.sprite.Sprite):
 
     def __init__(self, start,lifespan,forces = []):
         super(agent, self).__init__()
-        self.surf = pygame.Surface((5,5))
+        self.surf = pygame.Surface((6,6))
         self.surf.fill((100, 100, 45))
         self.rect = self.surf.get_rect(center = (start.show2())) # fix center of box to not intersect with edges of plane
 
@@ -66,6 +68,8 @@ class agent(pygame.sprite.Sprite):
         self.score = 1 #@TODO calculate score
         self.lifespan = lifespan
         self.inblock = 0
+        self.path = []
+        self.highpoint = (0,0)
 
         if len(forces) == 0:
             self.forces = np.array([])
@@ -80,7 +84,9 @@ class agent(pygame.sprite.Sprite):
             self.acc.add(self.forces[now])
         else:
             self.acc.cc(self.acc,0)
-
+        if now % 5 == 4:
+            self.path.append((self.rect.x, self.rect.y))
+            
         self.speed.add(self.acc)
 
         # self.surf.fill((0,0,125),self.rect)
@@ -105,18 +111,20 @@ class sim():
         self.mutrate = mutrate # take from user
         self.now = -1 # del later for testing only
         self.maxscore = 0
+        self.best = [(0,0),(10,10)]
+        self.highpoint = (0,0)
         for i in range(fpg):
             self.maxscore+=i
 
     def colcalc(self,agentcol): # pending redo with scoring system
         
         if self.now < agentcol.lifespan :
-            argu = agentcol.score/self.maxscore
+            argu = agentcol.score/self.lifespan* 3 * 255
             if argu > 255:
                 argu = 255
             if argu < 0:
-                argu = 0
-            col = (argu,argu,argu)
+                argu = 50
+            col = (argu/2,argu,argu/2)
         else:
             col = (158,64,64) # color for a dead agent
         return col
@@ -128,7 +136,6 @@ class sim():
         for i in range(pivot):
             if random.random() < self.mutrate:
                 temp = vector(0,0)
-                temp.cc(this.forces[i],2)
                 this.forces[i] = temp
             forces = np.append(forces,this.forces[i])
         for i in range(pivot, self.lifespan):
@@ -149,10 +156,12 @@ class sim():
         temp.cc(self.end)
         temp.sub(entity.xandy)
         at = temp.mag()
-        scorenow = (1-at/distance.mag()) * (self.lifespan - self.now) 
+        scorenow = (1-(at/distance.mag())) *100 + (1- ((self.now/self.lifespan))) * 100
         if scorenow < 0:
             scorenow = 0
-        entity.score += scorenow
+        if entity.score < scorenow:
+            entity.highpoint = (entity.rect.x, entity.rect.y)
+            entity.score = scorenow
     
     def selection(self,tempholder):
         '''
@@ -161,12 +170,14 @@ class sim():
             if choice < i.score:
                 return i
         '''
-        index = random.randint(0,5)
+        index = random.randint(0,11)
         return tempholder[index]
 
     def reset(self):
         tempholder = self.pool.sprites()
         tempholder = sorted(tempholder, key = lambda x : x.score, reverse = True)
+        self.best = tempholder[0].path
+        self.highpoint = tempholder[0].highpoint
         sumall = 0
         for i in tempholder:
             sumall += i.score
@@ -205,7 +216,7 @@ class sim():
             if entity in stoplist:
                 if entity.inblock == 0:
                     entity.inblock = 1
-                    entity.speed.cc(entity.speed,-1)
+                    entity.speed.cc(entity.speed,-0.8)
             else:
                 entity.inblock = 0
 
@@ -214,22 +225,26 @@ class sim():
             self.score(entity)
             entity.surf.fill(self.colcalc(entity))
             # print(entity.score)
-            '''
-            if entity.rect.left > 0 :
+            
+            if entity.rect.left < 0 :
                 entity.rect.left = 0
+                entity.speed.cc(entity.speed,0.8)
 
-            if entity.rect.right < self.w:
+            if entity.rect.right > self.w:
+                entity.speed.cc(entity.speed,0.8)
                 entity.rect.right = self.w
 
-            if entity.rect.top > 0:
+            if entity.rect.top < 0:
                 entity.rect.top = 0
+                entity.speed.cc(entity.speed,0.8)
 
-            if entity.rect.bottom < self.h:
+            if entity.rect.bottom > self.h:
                 entity.rect.bottom = self.h
+                entity.speed.cc(entity.speed,0.8)
+
+            """
+            # the infinte screen code
             
-            '''
-            '''
-            the infinte screen code
             if entity.rect.left > self.w :
                 entity.rect.left = 0
 
@@ -241,7 +256,7 @@ class sim():
 
             if entity.rect.bottom < 0:
                 entity.rect.bottom = self.h
-            '''
+            """
 
     def initagents(self, pop):
         for _ in range(pop):

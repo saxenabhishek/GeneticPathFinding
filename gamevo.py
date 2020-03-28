@@ -27,20 +27,20 @@ from pygame.locals import (
 ## Global variables to controle things
 
 # height and width of the window
-w, h = 600, 400
+w, h = 1280, 600
 
 # Start and End Points
-start = (0, 0)
-end = (500, 200)
+start = (20, 20)
+end = (1100, 500)
 
 # population per gen., mutation rate, frames given to each gen., No. of obs
-pop = 50
-mutrate = 0.2
-fpg = 700
-obs = 5
+pop = 200
+mutrate = 0.01
+fpg = 300
+obs = 15
 
 # initializing a sim object
-sim = cr.sim(w, h, (50, 50), end, mutrate, fpg)
+sim = cr.sim(w, h, start, end, mutrate, fpg)
 
 # pygame initializations
 pygame.init()
@@ -55,10 +55,10 @@ def rateupdate(pk_, rate_):
     """
     when you press the arrow keys this function changes the framerate
     """
-    if rate_ < 30:
-        rate_ = 30
-    if rate_ > 500:
-        rate = 480
+    if rate_ < 2:
+        rate_ = 2
+    if rate_ > 420:
+        rate_ = 420
     if pk_[K_LEFT]:
         rate_ -= 10
     if pk_[K_RIGHT]:
@@ -80,12 +80,10 @@ try:
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     on = True
-                    
         pk = pygame.key.get_pressed()
         rate = rateupdate(pk, rate)
         screen.fill((50, 50, 80))
-        clock.tick(rate)
-        
+        #clock.tick(rate)
         # Blue circle for end point
         pygame.draw.circle(screen, (64, 64, 255), end, 5)
         #don't disturb code above this
@@ -96,15 +94,25 @@ try:
         # to draw all sprites
         for i in sim.coll:
             screen.blit(i.surf, i.rect)
+            
         for entity in sim.pool:
             
             # draw cicles to know velocity direction
-            pygame.draw.circle(screen, (128, 255, 128),
-                               (entity.rect[0] + round(entity.speed.i*2) + 10,
-                                entity.rect[1] + round(entity.speed.j*2) + 10),
-                               2)
             screen.blit(entity.surf, entity.rect)
             
+            cirpos = (entity.rect[0] + round(entity.speed.i * 5),
+                      entity.rect[1] + round(entity.speed.j * 5))
+            
+            pygame.draw.aaline(screen,(170, 160, 128),
+                               (entity.rect[0] + 3, entity.rect[1] + 3),
+                               cirpos,1)
+            pygame.draw.circle(screen, (128, 255, 128),cirpos,2)
+            
+        #draw best path from last gen
+        pygame.draw.lines(screen,(128,200,128),False,sim.best,2)
+        #draw cicle on best path to show the highest point on it
+        pygame.draw.circle(screen,(255,128,100),sim.highpoint,5)
+        
         pygame.display.flip()
 except:
     print("error pls help")
