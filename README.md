@@ -15,12 +15,12 @@ you need a version of pygame and the files in this repo
 In gamevo.py you can play with these variables
 * width, height of screen
   > w, h = 1280, 600
-* start and end ponts
+* start and end points
   >start = (20, 20)
   >end = (1100, 500)
 * population size (pop)
 * mutation rate (mutrate)
-* franes per genareation (fpg)
+* frames per generation (fpg)
 * obstacles (obs)
   * >pop = 200
   * >mutrate = 0.01
