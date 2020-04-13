@@ -6,16 +6,25 @@ Created on Fri Feb 14 02:03:11 2020
 
 #game evo classes
 """
-
-
-
-
 import pygame
 import random
 import numpy as np
 
-class vector(): # simple vector class defines vectors in a polar system
+class vector()
     def __init__(self, i = None, j = None):
+        """
+        Parameters
+        ----------
+        i : int, optional
+            i of a vector, choosen randomly otherwise. The default is None.
+        j : TYPE, optional
+            j of a vector, choosen randomly otherwise. The default is None.
+
+        Returns
+        -------
+        Initialozies a vector.
+
+        """
         if i != None :
             self.i = i
         else:
@@ -27,28 +36,103 @@ class vector(): # simple vector class defines vectors in a polar system
             self.j = random.randrange(-1, 2) *0.01
 
     def add(self,that):
+        """
+        
+
+        Parameters
+        ----------
+        that : Vector
+        Adds that to self
+        
+        Returns
+        -------
+        None.
+
+        """
         self.i+= that.i
         self.j+= that.j
 
     def sub(self,that):
+        
+        """
+        Parameters
+        ----------
+        that : Vector
+        subtracts that from self
+        
+        Returns
+        -------
+        None.
+
+        """
         self.i-= that.i
         self.j-= that.j
 
     def cc(self,c , m =1):
+        """
+        
+
+        Parameters
+        ----------
+        c : vector
+            copies given vector to self
+        m : vector, optional
+            magnification can be provided if required. The default is 1.
+
+        Returns
+        -------
+        None.
+
+        """
         self.i = c.i * m
         self.j = c.j * m
 
     def mag(self):
+        """
+        
+
+        Returns
+        -------
+        int
+            Returns Magnitude of vector
+
+        """
         return ((self.i)**2 +(self.j)**2)**0.5
     
     def show2(self):
+        """
+        
+
+        Returns
+        -------
+        tuple of
+        
+        int i 
+            i of vector.
+        int j
+            j of vector.
+
+        """
         return (self.i,self.j)
 
     def show(self):
+        """
+        prints i and j for vector
+
+        """
         print(self.i,"i-> + ", self.j, "j->",sep="")
 
-class box(pygame.sprite.Sprite): # to make boxes of different colors
+class box(pygame.sprite.Sprite): 
     def __init__(self, pos, size):
+        """
+        Creates Static Blue Shade boxes
+
+        Parameters
+        ----------
+        pos : tuple/list  of position (x,y) 
+        size : dimensions
+
+        """
         super(box, self).__init__()
         self.surf = pygame.Surface(size)
         self.surf.fill((random.randint(69,87),random.randint(98,123), random.randint(128,255)))
@@ -57,6 +141,18 @@ class box(pygame.sprite.Sprite): # to make boxes of different colors
 class agent(pygame.sprite.Sprite):
 
     def __init__(self, start,lifespan,forces = []):
+        """
+        Initialoze an agent
+
+        Parameters
+        ----------
+        start : list of start coordinats
+        lifespan : For how many frames will it live for
+        forces : vector[], optional
+            Every agent has a random list of vectors.If forces is given the 
+            agent is initialized with that. The default is [].
+    
+        """
         super(agent, self).__init__()
         self.surf = pygame.Surface((6,6))
         self.surf.fill((100, 100, 45))
@@ -80,6 +176,17 @@ class agent(pygame.sprite.Sprite):
             self.forces = np.array(forces)
 
     def update(self,now):
+        """
+        
+        updates the agents velocity vector
+        
+        Parameters
+        ----------
+        now : int
+            so time is constant for all agents.
+
+        """
+        
         if(now < self.lifespan):
             self.acc.add(self.forces[now])
         else:
@@ -100,6 +207,26 @@ class agent(pygame.sprite.Sprite):
 
 class sim():
     def __init__(self,w,h,start,end,mutrate,fpg):
+        """
+        simulation object controles every agent, collisions, scores
+        and the genetic algo
+
+        Parameters
+        ----------
+        w : int
+            width of screen
+        h : int
+            width of screen
+        start : (int, int)
+            start point 
+        end : (int,int)
+            end point
+        mutrate : float (0 - 1)
+            mutation rate 
+        fpg : int
+            frames given to each gen
+
+        """
         self.w = w
         self.h = h
         self.lifespan = fpg
@@ -116,7 +243,21 @@ class sim():
         for i in range(fpg):
             self.maxscore+=i
 
-    def colcalc(self,agentcol): # pending redo with scoring system
+    def colcalc(self,agentcol):
+        """
+        calculates color of agent in a shade of green.
+
+        Parameters
+        ----------
+        agentcol : agent
+            agent whoose color needs to clculated
+
+        Returns
+        -------
+        col : (int,int,int) < 255
+            color of agent
+
+        """
         
         if self.now < agentcol.lifespan :
             argu = agentcol.score/self.lifespan* 3 * 255
@@ -130,6 +271,23 @@ class sim():
         return col
 
     def breed(self, this, that):
+        """
+        takes two agents and creates a new agent from the first two using a 
+        random piviot
+
+        Parameters
+        ----------
+        this : agent
+            one
+        that : agent
+            two
+
+        Returns
+        -------
+        agent
+            mixed forces array.
+
+        """
         pivot = random.randint(0,self.lifespan)
         # pivot = round(self.lifespan/2)
         forces = np.array([])
@@ -145,9 +303,17 @@ class sim():
             
         return agent(self.start,self.lifespan,forces)
     
-    # make score func
     def score(self,entity):
-        # score is calculated every time period, if higher it is updated warna nahi. time inverse is multiplied with score to prefer thoes who reached end first
+        """
+        checks distance from the end points and changes score if is higher
+
+        Parameters
+        ----------
+        entity : agent
+            to calc score
+
+
+        """
         distance = vector(0,0)
         distance.cc(self.start)
         distance.sub(self.end)
@@ -156,7 +322,7 @@ class sim():
         temp.cc(self.end)
         temp.sub(entity.xandy)
         at = temp.mag()
-        scorenow = (1-(at/distance.mag())) *100 + (1- ((self.now/self.lifespan))) * 100
+        scorenow = (1-(at/distance.mag())) *100 + (1- ((self.now/self.lifespan))) * 10
         if scorenow < 0:
             scorenow = 0
         if entity.score < scorenow:
@@ -164,6 +330,22 @@ class sim():
             entity.score = scorenow
     
     def selection(self,tempholder):
+        """
+        selects a agent from a list of sorted agents 
+
+        Parameters
+        ----------
+        tempholder : agents[]
+            agents to select from. Must be a sorted list.
+
+        Returns
+        -------
+        agent
+            selected agent
+
+        """
+        
+        # code to give all agents equal chances of getting selected.
         '''
         choice = random.random()
         for i in tempholder:
@@ -174,6 +356,11 @@ class sim():
         return tempholder[index]
 
     def reset(self):
+        """
+        after every genaration it calculates the best and resets everything for the 
+        next genaration
+
+        """
         tempholder = self.pool.sprites()
         tempholder = sorted(tempholder, key = lambda x : x.score, reverse = True)
         self.best = tempholder[0].path
@@ -181,9 +368,9 @@ class sim():
         sumall = 0
         for i in tempholder:
             sumall += i.score
-        print(tempholder[0].score)
+        print(tempholder[0].score) # best score
         tempholder[0].score /= sumall
-        print(tempholder[0].score)
+        print(tempholder[0].score) # percentage of weightage of best score
         for i in range(1,len(tempholder)):
             tempholder[i].score /= sumall
             tempholder[i].score += tempholder[i-1].score
@@ -194,13 +381,17 @@ class sim():
         
             if one == two : 
                 one = self.selection(tempholder)
+                
             i.kill()
             self.addagent(self.breed(one,two))
         
 
-
-
     def updateall(self):
+        """
+        updates everything in simulation every frame
+
+
+        """
         if self.now == self.lifespan:
             self.now = -1
             self.reset()
@@ -259,19 +450,54 @@ class sim():
             """
 
     def initagents(self, pop):
+        """
+        initiate n number of agents
+
+        Parameters
+        ----------
+        pop : int
+            Number of agents to initate
+            
+        """
         for _ in range(pop):
             temp = agent(self.start,self.lifespan)
             self.addagent(temp)
             
     def addagent(self,temp):
+        """
+        Adds agents to required lists
+
+        Parameters
+        ----------
+        temp : agent
+        
+        """
         self.pool.add(temp)
         self.gr.add(temp)
+        
     def addcoll(self, box):
+        """
+        add blue boxes to lists
+
+        Parameters
+        ----------
+        box : box
+    
+        """
         self.coll.add(box)
         self.gr.add(box)
 
     # func to gen obstacles TODO: Make sure they are between start and end
     def obs(self,x):
+        """
+        genarates blocks to obstruct agents
+
+        Parameters
+        ----------
+        x : int
+            number to be genarated.
+
+        """
      for _ in range(x):
          A = random.randint( 10, self.w/2)  # two consts to make code readable
          B = random.randint( 10, self.h/2)
