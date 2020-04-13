@@ -27,8 +27,21 @@ In gamevo.py you can play with these variables
   * >fpg = 300
   * >obs = 15
   
+  
+when run with the above parameters we can see:
+![test1](https://github.com/saxenabhishek/GeneticPathFinding/blob/master/pics/gen1.jpg)
 
-@ TODO
+* Small Green squares - Agents
+* lines and circles on agents - to show their velocity vector.
+* Big Blue Boxes - Obstacles 
+* Green Line - Best path as of now.
+* Blue Dot - Destination Point
+* Red Dot - Point with the Highest score on the green line.
 
-* comment everything
-* add screenshots
+This image is of the 5th genaration. Notice how it's easy for the agents to colide with the edge of the screen to reduce their speed and then go in the opposite direction to reach their destination.
+
+After about 20 secs of training and at genaration 43.
+![test1](https://github.com/saxenabhishek/GeneticPathFinding/blob/master/pics/gen2.jpg)
+
+
+The agents have figured out an easier path by bending towards the destination so they could reach the destination quicker.
